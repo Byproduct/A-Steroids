@@ -101,6 +101,8 @@ public class MainProgram extends Application {
             long prevFrameTime = 0;
             int doLessOften = 0;
 
+            
+            // game loop starts here
             @Override
             public void handle(long now) {
 
