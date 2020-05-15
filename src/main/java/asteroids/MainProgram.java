@@ -18,7 +18,6 @@ import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
@@ -33,7 +32,6 @@ public class MainProgram extends Application {
     public static int screenWidth = 1920;
     public static int screenHeight = 1080;
     public static int bottomDivider = 1030;
-    WritableImage screenShot = new WritableImage(1920, 1080);
     public boolean music;
 
     @Override
