@@ -38,7 +38,7 @@ public class Spaceship extends Entity {
         this.worldX = 0;
         this.worldY = 0;
         this.weapon1 = true;
-        this.weapon2 = true;
+        this.weapon2 = false;
         this.weapon8 = false;
         this.weapon9 = false;
 
