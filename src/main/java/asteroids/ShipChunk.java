@@ -6,7 +6,7 @@ import javafx.scene.shape.Polygon;
 
 public class ShipChunk extends Entity {
 
-    private double pyorimisliike;
+    private double Rotation;
 
     public ShipChunk(double x, double y) {
         super(new Polygon(-3, -3, 3, -3, 0, 12), (int) x, (int) y);
@@ -16,16 +16,16 @@ public class ShipChunk extends Entity {
         super.getShape().setScaleX(1.4);
         super.getShape().setScaleY(1.4);
 
-        int kiihdytystenMaara = 50 + rnd.nextInt(50);
-        for (int i = 0; i < kiihdytystenMaara; i++) {
+        int Acceleration = 50 + rnd.nextInt(50);
+        for (int i = 0; i < Acceleration; i++) {
             accelerate();
         }
-        this.pyorimisliike = 0.5 - rnd.nextDouble();
-        this.pyorimisliike = this.pyorimisliike * 50;
+        this.Rotation = 0.5 - rnd.nextDouble();
+        this.Rotation = this.Rotation * 50;
     }
 
     public void move() {
         super.move();
-        super.getShape().setRotate(super.getShape().getRotate() + pyorimisliike);
+        super.getShape().setRotate(super.getShape().getRotate() + Rotation);
     }
 }
