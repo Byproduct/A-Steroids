@@ -31,10 +31,10 @@ public class AsteroidDamage {
                         if (shot instanceof Laser_homing) {
                             shot.getTarget().setTargeted(false);
                         }
-                        asteroid.setTargeted(false);
                         asteroid.takeDamage();
 
                         if (asteroid.getHealth() <= 0) {
+                            asteroid.setTargeted(false);
                             asteroid.setAlive(false);
 
                             if (asteroid.getScale().equals("huge")) {
@@ -123,7 +123,8 @@ public class AsteroidDamage {
                             }
                         }
                     }
-                }}
+                }
+            }
             );
         }
         );
