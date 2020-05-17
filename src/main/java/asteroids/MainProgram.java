@@ -191,7 +191,6 @@ public class MainProgram extends Application {
                     }
                 });
 
-                debug.startTime();
                 // All objects move in relation to the ship, which is always at the center coordinates (screenWidth / 2 , screenHeight / 2)  :|
                 // Not great, for several reasons (e.g. multiplayer). Couldn't figure out how to display only specific X/Y area of a Pane, though. If it's possible, just remove these lines.
                 moveRelative(ship);
@@ -199,7 +198,6 @@ public class MainProgram extends Application {
                 moveRelative(ship.getShots());
                 moveRelative(ship.getTrails());
                 moveRelative(sparks);
-                debug.endTime();
 
                 if (Globals.getInstance().esc() == true) {
                     System.out.println("\n\n\n\n\nYou have fondled the esc button, GG.\n\n\n\n\n");
