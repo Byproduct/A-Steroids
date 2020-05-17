@@ -16,7 +16,6 @@ public class Asteroid extends Entity {
     private int flashFrame;
     private boolean targeted;
 
-    // todo: move lots of this to AsteroidSpawner
     public Asteroid(int x, int y, Polygon asteroidPolygon, String scale, Color newColor) {
         super(new Polygon(), x, y);
         super.setShape(asteroidPolygon);

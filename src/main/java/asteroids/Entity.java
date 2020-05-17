@@ -45,12 +45,12 @@ public abstract class Entity {
     }
 
     public boolean collide(Entity anotherEntity) {
-        int distanceY = abs((int) (this.shape.getTranslateX() - anotherEntity.shape.getTranslateX()));
-        int etaisyysY = abs((int) (this.shape.getTranslateY() - anotherEntity.shape.getTranslateY()));
+        int distanceX = abs((int) (this.shape.getTranslateX() - anotherEntity.shape.getTranslateX()));
+        int distanceY = abs((int) (this.shape.getTranslateY() - anotherEntity.shape.getTranslateY()));
 
         int combinedCollisionSize = this.collisionSize + anotherEntity.getCollisionSize();
 
-        if (distanceY < combinedCollisionSize && etaisyysY < combinedCollisionSize) {
+        if (distanceX < combinedCollisionSize && distanceY < combinedCollisionSize) {
             Shape collisionArea = Shape.intersect(this.shape, anotherEntity.getShape());
             return collisionArea.getBoundsInLocal().getWidth() != -1;
         }

@@ -13,13 +13,14 @@ public class Laser_homing extends Laser {
     public Laser_homing(int x, int y) {
         super(x, y);
         this.getShape().setFill(Color.rgb(0, 255, 150));
-        this.setRange(55);
+        this.setRange(99999999);  // or 55
     }
 
     @Override
     public void move() {
-        if (this.target.isAlive() == false) {
-            boolean targetFound = this.acquireNewTarget();        // to-do: acquireNewTarget method crashes with null pointer if no remaining asteroids are found
+        if ((this.target.isAlive() == false) && (MainProgram.seekerChoke < 10)) {   // seek a new target if the previous target died - however this can cause a spike when targeted roids die - so don't re-acquire new targets for more than 10 shots per frame
+            boolean targetFound = this.acquireNewTarget();                      // to-do: crashes with null pointer if no remaining asteroids are found
+            MainProgram.seekerChoke++;
         }
         if (this.target != null) {
             this.targetPoint = new Point2D(this.target.getShape().getTranslateX(), this.target.getShape().getTranslateY());

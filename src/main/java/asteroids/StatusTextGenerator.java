@@ -4,7 +4,7 @@ import java.util.List;
 
 public class StatusTextGenerator {
 // to-do: some of this stuff doesn't need updating every frame
-    
+
     double fps;
     String fpsString;
     int framecounter;
@@ -38,40 +38,22 @@ public class StatusTextGenerator {
         List<Asteroid> asteroids = Globals.getInstance().getAsteroids();
         List<Trail> trails = Globals.getInstance().getShip().getTrails();
         List<Spark> sparks = Globals.getInstance().getSparks();
-        List<Spark> queuedSparks = Globals.getInstance().getQueuedSparks();
         PointsCounter points = Globals.getInstance().getPoints();
 
         String lasers_formatted = String.format("%02d", ship.getShots().size());
-        String sparks_formatted = String.format("%04d", sparks.size());
 
-
-        String text = "fps: " + fpsString + "         " + "  Roids alive: " + asteroids.size() + " " + roidList(asteroids) + "         " + "Roids murdered: " + " " + points.toString() + "         " + "Lasers: " + lasers_formatted + "         " + "Sparks: " + sparks_formatted;
-        if (queuedSparks.size() > 0) {
-            text = text + "(" + queuedSparks.size() + ")";
+        int sparksAlive = 0;
+        for (Spark spark : sparks) {
+            if (spark.isAlive()) {
+                sparksAlive++;
+            }
         }
-        text = text + "         " + "X: " + (int) (ship.getWorldX()) + "  Y: " + (int) (ship.getWorldY()) + "         " + "Thrust: ";
-        
-//        Identical to above but readable
-//        String text = "fps: " + fpsString;
-//        text = text + "         ";
-//        text = text + "  Roids alive: " + asteroids.size() + " ";
-//        text = text + roidList(asteroids);
-//        text = text + "         ";
-//        text = text + "Roids murdered: " + " " + points.toString();
-//        text = text + "         ";
-//        text = text + "Lasers: " + lasers_formatted;
-//        text = text + "         ";
-//        text = text + "Sparks: " + sparks_formatted;
-//        if (queuedSparks.size() > 0) {
-//            text = text + "(" + queuedSparks.size() + ")";
-//        }
-//        text = text + "         ";
-//        text = text + "X: ";
-//        text = text + (int) (ship.getWorldX());
-//        text = text + "  Y: ";
-//        text = text + (int) (ship.getWorldY());
-//        text = text + "         ";
-//        text = text + "Thrust: ";
+        String sparks_alive_formatted = String.format("%04d", sparksAlive);
+        String sparks_total_formatted = String.format("%04d", sparks.size());
+
+        String text = "fps: " + fpsString + "         " + "  Roids alive: " + asteroids.size() + " " + roidList(asteroids) + "         " + "Roids murdered: " + " " + points.toString() + "         " + "Lasers: " + lasers_formatted + "         "
+                + "Sparks: " + sparks_alive_formatted + "/" + sparks_total_formatted + "         " + "X: " + (int) (ship.getWorldX()) + "  Y: " + (int) (ship.getWorldY()) + "         " + "Thrust: ";
+
         for (int i = 0; i < trails.size(); i += 10) {
             text = text + "|";
         }

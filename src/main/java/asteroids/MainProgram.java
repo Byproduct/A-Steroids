@@ -1,8 +1,6 @@
 // Author: https://soundcloud.com/byproduct
 // newbie alert: if any of this code is weird, it's because this is my first Java program beyond course exercises.
-
 // Pull requests? Please be beginner-friendly (e.g. comments, readability). This is a learning project – I must understand the code if I'm to add it.
-
 package asteroids;
 
 import java.util.ArrayList;
@@ -29,6 +27,7 @@ import javafx.stage.Stage;
 public class MainProgram extends Application {
 
     // to-do: fix fullscreen on > fullhd monitors
+    public static int seekerChoke = 0;
     public static int screenWidth = 1920;
     public static int screenHeight = 1080;
     public static int bottomDivider = 1030;
@@ -47,6 +46,7 @@ public class MainProgram extends Application {
         // audioplayer.playMusic();                                   // key M toggles music
         KeyboardHandler keyboardhandler = new KeyboardHandler();
         Pane pane = Globals.getInstance().getPane();                  // all graphics go here
+        Debug debug = Globals.getInstance().getDebug();                  // all graphics go here
 
         pane.setPrefSize(screenWidth, screenHeight);
 
@@ -69,8 +69,11 @@ public class MainProgram extends Application {
 
         List<Asteroid> asteroids = Globals.getInstance().getAsteroids();
         List<Asteroid> QueuedAsteroids = Globals.getInstance().getQueuedAsteroids();
+
+        SparkSpawner sparkspawner = Globals.getInstance().getSparkspawner();
         List<Spark> sparks = Globals.getInstance().getSparks();
-        List<Spark> queuedSparks = Globals.getInstance().getQueuedSparks();
+        sparkspawner.initialize();
+
         List<ShipChunk> shipChunks = new ArrayList<>();
         AsteroidDamage asteroidDamageFX = new AsteroidDamage();
 
@@ -101,7 +104,6 @@ public class MainProgram extends Application {
             long prevFrameTime = 0;
             int doLessOften = 0;
 
-            
             // game loop starts here
             @Override
             public void handle(long now) {
@@ -119,8 +121,7 @@ public class MainProgram extends Application {
 
                 asteroids.forEach(asteroid -> asteroid.move());
                 removeDead(asteroids);
-
-                asteroidDamageFX.process(asteroidspawner);              // things to do when roids get hit
+                asteroidDamageFX.process(asteroidspawner);              // things to do when roids get hit    ( mega expensive!)
                 asteroidDamageFX.flashDamaged(asteroids);
 
                 // check for game over       
@@ -161,16 +162,10 @@ public class MainProgram extends Application {
                 });
                 removeDead(ship.getShots());
 
-                // things to do on every 10th frame instead of each one
+                // things to do on every 10th frame instead of each one    (used to be more stuff here)
                 doLessOften++;
                 switch (doLessOften) {
                     case 1:
-                        removeDead(sparks);
-                        break;
-                    case 2:
-                        removeDeadFromListOnly(queuedSparks);
-                        break;
-                    case 3:
                         removeDead(ship.getTrails());
                         break;
                     case 10:
@@ -189,32 +184,14 @@ public class MainProgram extends Application {
                 });
                 QueuedAsteroids.clear();
 
-                // New sparks are added in the same way, but with a maximum number added per frame.
-                // to-do: this is still slow. For a better method try: .filter spawndelay <= 0, and use some built-in copying shenanigans (Collections.copy, stream?) instead of manual copying. Must actually clone items (not make double reference).
-                
-                for (Spark queuedSpark : queuedSparks) {
-                    if (queuedSpark.isAlive()) {
-                        queuedSpark.waitForDelayedSpawn();                   // New sparks can be added with a specified delay. This subtracts the number by 1 each tick. Spawns when 0.
-                        if (sparks.size() < 5000) {                         // Max simultaneous sparks
-                            if (queuedSpark.getSpawnDelay() < 0) {
-                                Spark clone = new Spark();
-                                clone = queuedSpark.createClone();
-                                sparks.add(clone);
-                                pane.getChildren().add(clone.getShape());
-                                queuedSpark.setAlive(false);
-                            }
-                        }
-                        if (queuedSpark.getSpawnDelay() < -60) {            // if a spark has stayed in the queue for more than 60 ticks (~1sec) without spawning, just erase it. It'd look weird.
-                            queuedSpark.setAlive(false);
-                        }
-                    }
-                }
-
                 sparks.forEach(spark -> {
-                    spark.erode();
-                    spark.move();
+                    if (spark.isAlive()) {
+                        spark.erode();
+                        spark.move();
+                    }
                 });
 
+                debug.startTime();
                 // All objects move in relation to the ship, which is always at the center coordinates (screenWidth / 2 , screenHeight / 2)  :|
                 // Not great, for several reasons (e.g. multiplayer). Couldn't figure out how to display only specific X/Y area of a Pane, though. If it's possible, just remove these lines.
                 moveRelative(ship);
@@ -222,30 +199,20 @@ public class MainProgram extends Application {
                 moveRelative(ship.getShots());
                 moveRelative(ship.getTrails());
                 moveRelative(sparks);
-                moveRelative(queuedSparks);
+                debug.endTime();
+
+                if (Globals.getInstance().esc() == true) {
+                    System.out.println("\n\n\n\n\nYou have fondled the esc button, GG.\n\n\n\n\n");
+                    Platform.exit();
+                    System.exit(0);
+                }
+
+                seekerChoke = 0;
 
                 // calculate the time it took to process one frame (60fps = 17ms)
                 prevFrameTime = frameTime;
                 frameTime = System.currentTimeMillis();
-
-                /*
-                if ([condition]) {                         //    if the PC is struggling (e.g. low FPS)   
-                    queuedSparks.clear();                  //    -> remove all sparks from queue
-
-                    if (sparks.size() > 500) {             //    -> ..and 500 from screen
-                        for (int i = 0; i < 500; i++) {    //                   
-                            sparks.get(i).setAlive(false);               //to-do: implement good detection, one-frame detection sux
-                        }
-                    }
-                    removeDead(sparks);
-                }
-                 */
-                
-                 if (Globals.getInstance().esc() == true) {
-                     System.out.println("\n\n\n\n\nYou have fondled the esc button, GG.\n\n\n\n\n");
-                     Platform.exit();
-                     System.exit(0);
-                 }
+                // game loop ends here
             }
         }
                 .start();
@@ -254,15 +221,19 @@ public class MainProgram extends Application {
     public void moveRelative(List<? extends Entity> lista) {
         Spaceship ship = Globals.getInstance().getShip();
         for (Entity entity : lista) {
-            entity.getShape().setTranslateX(entity.getShape().getTranslateX() - ship.getVelocity().getX());
-            entity.getShape().setTranslateY(entity.getShape().getTranslateY() - ship.getVelocity().getY());
+            if (entity.isAlive()) {
+                entity.getShape().setTranslateX(entity.getShape().getTranslateX() - ship.getVelocity().getX());
+                entity.getShape().setTranslateY(entity.getShape().getTranslateY() - ship.getVelocity().getY());
+            }
         }
     }
 
     public void moveRelative(Entity entity) {
-        Spaceship ship = Globals.getInstance().getShip();
-        entity.getShape().setTranslateX(entity.getShape().getTranslateX() - ship.getVelocity().getX());
-        entity.getShape().setTranslateY(entity.getShape().getTranslateY() - ship.getVelocity().getY());
+        if (entity.isAlive()) {
+            Spaceship ship = Globals.getInstance().getShip();
+            entity.getShape().setTranslateX(entity.getShape().getTranslateX() - ship.getVelocity().getX());
+            entity.getShape().setTranslateY(entity.getShape().getTranslateY() - ship.getVelocity().getY());
+        }
     }
 
     public void removeDead(List<? extends Entity> list) {                       // removes objects with alive == false 

@@ -12,13 +12,14 @@ public class Globals {
     private static Globals instance;
 
     private AudioPlayer audioplayer = new AudioPlayer();
+    private Debug debug = new Debug();
     private List<Asteroid> asteroids = new ArrayList<>();
     private List<Asteroid> queuedAsteroids = new ArrayList<>();
     private Pane pane = new Pane();
     private PointsCounter points = new PointsCounter(); 
     private Spaceship ship;
+    private SparkSpawner sparkspawner = new SparkSpawner();
     private List<Spark> sparks = new ArrayList<>();
-    private List<Spark> queuedSparks = new ArrayList<>();
     private boolean escapePressed;
 
     private Globals() {
@@ -49,8 +50,16 @@ public class Globals {
         return queuedAsteroids;
     }
 
+    public SparkSpawner getSparkspawner() {
+        return sparkspawner;
+    }
+
     public AudioPlayer getAudioplayer() {
         return audioplayer;
+    }
+
+    public Debug getDebug() {
+        return debug;
     }
 
     public Pane getPane() {
@@ -68,9 +77,4 @@ public class Globals {
     public List<Spark> getSparks() {
         return sparks;
     }
-
-    public List<Spark> getQueuedSparks() {
-        return queuedSparks;
-    }
-
 }

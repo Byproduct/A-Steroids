@@ -45,7 +45,7 @@ public class AudioPlayer extends Thread {
             try {
                 Thread.sleep(20);
             } catch (InterruptedException e) {
-                System.out.println("Audio thread.sleep error?");
+//                System.out.println("Audio thread.sleep error?");
                 return;
             }
 
@@ -54,7 +54,7 @@ public class AudioPlayer extends Thread {
                     this.audiofiles.get(this.audioQueue.get(0)).play();
                     this.audioQueue.remove(0);
                 } catch (Exception e) {
-                    System.out.println("Audio thread error?");
+//                    System.out.println("Audio thread error?");
                 }
             }
         }
