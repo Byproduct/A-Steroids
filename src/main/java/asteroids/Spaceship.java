@@ -126,7 +126,7 @@ public class Spaceship extends Entity {
         Pane pane = Globals.getInstance().getPane();
         if (this.cooldown2 <= 0) {
             audioplayer.playSound("gun3");
-            for (int i = 0; i < 30; i++) {
+            for (int i = 0; i < 50; i++) {
                 Laser_homing laser = new Laser_homing((int) this.getShape().getTranslateX() + rnd.nextInt(20) - 10, (int) this.getShape().getTranslateY() + rnd.nextInt(20) - 10);
                 setNewLaserPosition(laser);
                 laser.accelerate(400);
@@ -136,7 +136,7 @@ public class Spaceship extends Entity {
 
                 pane.getChildren().add(laser.getShape());
 
-                this.cooldown2 += 0.3;
+                this.cooldown2 += 1;
             }
         }
     }

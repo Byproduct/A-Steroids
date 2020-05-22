@@ -13,10 +13,11 @@ public class Globals {
 
     private AudioPlayer audioplayer = new AudioPlayer();
     private Debug debug = new Debug();
+    private List<DelayedExplosion> delayedExplosions = new ArrayList<>();
     private List<Asteroid> asteroids = new ArrayList<>();
     private List<Asteroid> queuedAsteroids = new ArrayList<>();
     private Pane pane = new Pane();
-    private PointsCounter points = new PointsCounter(); 
+    private PointsCounter points = new PointsCounter();
     private Spaceship ship;
     private SparkSpawner sparkspawner = new SparkSpawner();
     private List<Spark> sparks = new ArrayList<>();
@@ -33,17 +34,21 @@ public class Globals {
         }
         return instance;
     }
-    
+
     public void setEsc() {
         this.escapePressed = true;
     }
-    
+
     public boolean esc() {
         return escapePressed;
     }
 
     public List<Asteroid> getAsteroids() {
         return asteroids;
+    }
+
+    public List<DelayedExplosion> getDelayedExplosions() {
+        return delayedExplosions;
     }
 
     public List<Asteroid> getQueuedAsteroids() {
@@ -69,7 +74,7 @@ public class Globals {
     public PointsCounter getPoints() {
         return points;
     }
-    
+
     public Spaceship getShip() {
         return ship;
     }

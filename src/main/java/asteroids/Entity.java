@@ -44,17 +44,57 @@ public abstract class Entity {
         }
     }
 
+//    collision check 1st version
+//    public boolean collide(Entity anotherEntity) {
+//        int distanceX = abs((int) (this.shape.getTranslateX() - anotherEntity.shape.getTranslateX()));
+//        int distanceY = abs((int) (this.shape.getTranslateY() - anotherEntity.shape.getTranslateY()));
+//
+//        int combinedCollisionSize = this.collisionSize + anotherEntity.getCollisionSize();
+//
+//        if (distanceX < combinedCollisionSize && distanceY < combinedCollisionSize) {
+//            Shape collisionArea = Shape.intersect(this.shape, anotherEntity.getShape());
+//            return collisionArea.getBoundsInLocal().getWidth() != -1;
+//        }
+//        return false;
+//    }
+//    collision check (hopefully) faster 2nd version 
     public boolean collide(Entity anotherEntity) {
         int distanceX = abs((int) (this.shape.getTranslateX() - anotherEntity.shape.getTranslateX()));
-        int distanceY = abs((int) (this.shape.getTranslateY() - anotherEntity.shape.getTranslateY()));
-
-        int combinedCollisionSize = this.collisionSize + anotherEntity.getCollisionSize();
-
-        if (distanceX < combinedCollisionSize && distanceY < combinedCollisionSize) {
-            Shape collisionArea = Shape.intersect(this.shape, anotherEntity.getShape());
-            return collisionArea.getBoundsInLocal().getWidth() != -1;
+        if (distanceX < 500) {
+            int distanceY = abs((int) (this.shape.getTranslateY() - anotherEntity.shape.getTranslateY()));
+            if (distanceY < 500) {
+                int combinedCollisionSize = this.collisionSize + anotherEntity.getCollisionSize();
+                if (distanceX < combinedCollisionSize) {
+                    if (distanceY < combinedCollisionSize) {
+                        Shape collisionArea = Shape.intersect(this.shape, anotherEntity.getShape());
+                        return collisionArea.getBoundsInLocal().getWidth() != -1;
+                    }
+                }
+            }
         }
         return false;
+    }
+
+    // shot vs asteroid collision now separated into coarse (multicore) and fine (singlecore) checks
+    public boolean collideCoarse(Entity anotherEntity) {
+        int distanceX = abs((int) (this.shape.getTranslateX() - anotherEntity.shape.getTranslateX()));
+        if (distanceX < 500) {
+            int distanceY = abs((int) (this.shape.getTranslateY() - anotherEntity.shape.getTranslateY()));
+            if (distanceY < 500) {
+                int combinedCollisionSize = this.collisionSize + anotherEntity.getCollisionSize();
+                if (distanceX < combinedCollisionSize) {
+                    if (distanceY < combinedCollisionSize) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean collideFine(Entity anotherEntity) {
+        Shape collisionArea = Shape.intersect(this.shape, anotherEntity.getShape());
+        return collisionArea.getBoundsInLocal().getWidth() != -1;
     }
 
     public int getCollisionSize() {

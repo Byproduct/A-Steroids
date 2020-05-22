@@ -8,9 +8,13 @@ import javafx.scene.layout.Pane;
 public class KeyboardHandler {
 
     private Map<KeyCode, Boolean> pressedKeys;
+    AudioPlayer audioplayer;
+    Spaceship ship;
 
     public KeyboardHandler() {
         this.pressedKeys = new HashMap<>();
+        this.audioplayer = Globals.getInstance().getAudioplayer();
+        this.ship = Globals.getInstance().getShip();
     }
 
     public void keyPress(KeyCode keycode) {
@@ -23,9 +27,6 @@ public class KeyboardHandler {
 
     // to-do: Fix toggle buttons (now toggle every frame -> random result)
     public void handle() {
-        AudioPlayer audioplayer = Globals.getInstance().getAudioplayer();
-        Pane pane = Globals.getInstance().getPane();
-        Spaceship ship = Globals.getInstance().getShip();
 
         if (this.pressedKeys.getOrDefault(KeyCode.LEFT, false)) {
             ship.turnLeft();

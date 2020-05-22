@@ -60,7 +60,7 @@ public class Laser_homing extends Laser {
             }
         }
         this.setVelocity(new Point2D(0, 0));                    //reset velocity for each frame  (or could just keep accelerating for less effective seeking)
-        this.accelerate(250);                
+        this.accelerate(250);                  //default 250
         this.getShape().setTranslateX(this.getShape().getTranslateX() + this.getVelocity().getX());
         this.getShape().setTranslateY(this.getShape().getTranslateY() + this.getVelocity().getY());
     }

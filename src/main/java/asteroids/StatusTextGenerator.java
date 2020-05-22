@@ -14,12 +14,12 @@ public class StatusTextGenerator {
         this.fps = 0;
         this.fpsString = "00";
         this.framecounter = 0;
-        this.frameLengths = new long[60];
+        this.frameLengths = new long[20];             //60
     }
 
     public String generate(long frameTime, long prevFrameTime) {
         this.framecounter++;
-        if (this.framecounter == 60) {
+        if (this.framecounter == 20) {               //60
             framecounter = 0;
         }
         long frameLength = frameTime - prevFrameTime;
@@ -31,10 +31,15 @@ public class StatusTextGenerator {
         }
         if (totalTime != 0) {
             double seconds = totalTime * 1.0 / 1000;
-            this.fps = (int) (60 / seconds);
+            this.fps = (int) (20 / seconds);
             this.fpsString = String.format("%02d", (int) (fps));
         }
         Spaceship ship = Globals.getInstance().getShip();
+        
+        if (this.fps > 52) {
+            ship.shoot();
+        }
+        
         List<Asteroid> asteroids = Globals.getInstance().getAsteroids();
         List<Trail> trails = Globals.getInstance().getShip().getTrails();
         List<Spark> sparks = Globals.getInstance().getSparks();

@@ -1,6 +1,9 @@
 // Author: https://soundcloud.com/byproduct
 // newbie alert: if any of this code is weird, it's because this is my first Java program beyond course exercises.
 // Pull requests? Please be beginner-friendly (e.g. comments, readability). This is a learning project – I must understand the code if I'm to add it.
+
+
+// to-do: animationtimer tied to refresh rate -> make fixed 50 or 60fps
 package asteroids;
 
 import java.util.ArrayList;
@@ -46,7 +49,6 @@ public class MainProgram extends Application {
         // audioplayer.playMusic();                                   // key M toggles music
         KeyboardHandler keyboardhandler = new KeyboardHandler();
         Pane pane = Globals.getInstance().getPane();                  // all graphics go here
-        Debug debug = Globals.getInstance().getDebug();                  // all graphics go here
 
         pane.setPrefSize(screenWidth, screenHeight);
 
@@ -73,6 +75,7 @@ public class MainProgram extends Application {
         SparkSpawner sparkspawner = Globals.getInstance().getSparkspawner();
         List<Spark> sparks = Globals.getInstance().getSparks();
         sparkspawner.initialize();
+        List<DelayedExplosion> delayedExplosions = Globals.getInstance().getDelayedExplosions();
 
         List<ShipChunk> shipChunks = new ArrayList<>();
         AsteroidDamage asteroidDamageFX = new AsteroidDamage();
@@ -82,6 +85,7 @@ public class MainProgram extends Application {
         asteroidspawner.spawnStartingRoids(100, "medium", 500, 800);
         asteroidspawner.spawnStartingRoids(300, "large", 1000, 1050);
         asteroidspawner.spawnStartingRoids(50, "huge", 2000, 4000);
+//        asteroidspawner.spawnStartingRoids(5000, "medium", 10000, 15000);
         asteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getShape()));
 
         Scene scene = new Scene(pane);
@@ -98,7 +102,7 @@ public class MainProgram extends Application {
         });
 
         new AnimationTimer() {
-
+            Debug debug = Globals.getInstance().getDebug();
             int frame = 0;
             long frameTime = 0;
             long prevFrameTime = 0;
@@ -108,20 +112,17 @@ public class MainProgram extends Application {
             @Override
             public void handle(long now) {
 
-                statusbarText.setText(statustext.generate(frameTime, prevFrameTime));
+                statusbarText.setText(statustext.generate(frameTime, prevFrameTime));          // safe to thread? Is just 0.2ms though
                 statusBar.toFront();
                 statusbarText.toFront();
-
                 if (ship.isAlive()) {
-                    keyboardhandler.handle();
+                    keyboardhandler.handle();           // weird 20ms spikes every few frames?
                 }
-
                 ship.move();
                 ship.cooldowns();
-
                 asteroids.forEach(asteroid -> asteroid.move());
                 removeDead(asteroids);
-                asteroidDamageFX.process(asteroidspawner);              // things to do when roids get hit    ( mega expensive!)
+                asteroidDamageFX.process();              // things to do when roids get hit
                 asteroidDamageFX.flashDamaged(asteroids);
 
                 // check for game over       
@@ -154,6 +155,7 @@ public class MainProgram extends Application {
 
                 shipChunks.forEach(shipChunk -> shipChunk.move());
 
+                // to-do: fixed list for shots, similar to sparks
                 ship.getShots().forEach(shot -> {
                     if (shot.isAlive()) {
                         shot.move();
@@ -191,6 +193,14 @@ public class MainProgram extends Application {
                     }
                 });
 
+                delayedExplosions.forEach(delayedExplosion -> {
+                    delayedExplosion.erode();
+                    delayedExplosion.moveRelative();
+                });
+                delayedExplosions.removeAll(delayedExplosions.stream()
+                        .filter(delayedExplosion -> !delayedExplosion.isAlive())
+                        .collect(Collectors.toList()));
+
                 // All objects move in relation to the ship, which is always at the center coordinates (screenWidth / 2 , screenHeight / 2)  :|
                 // Not great, for several reasons (e.g. multiplayer). Couldn't figure out how to display only specific X/Y area of a Pane, though. If it's possible, just remove these lines.
                 moveRelative(ship);
@@ -210,6 +220,7 @@ public class MainProgram extends Application {
                 // calculate the time it took to process one frame (60fps = 17ms)
                 prevFrameTime = frameTime;
                 frameTime = System.currentTimeMillis();
+
                 // game loop ends here
             }
         }

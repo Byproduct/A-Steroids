@@ -3,6 +3,9 @@ package asteroids;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.scene.paint.Color;
 
 //to-do: spark creation is still slow - "maybe" should create them in a batch instead of one at a time
@@ -13,20 +16,47 @@ public class AsteroidDamage {
     public AsteroidDamage() {
     }
 
-    public void process(AsteroidSpawner asteroidspawner) {
-        Spaceship ship = Globals.getInstance().getShip();
+    public void process() {
+        Spaceship ship = Globals.getInstance().getShip();             // give these to class instead of initializing every frame? Not sure if matters
+        AsteroidSpawner asteroidspawner = new AsteroidSpawner();
         List<Asteroid> asteroids = Globals.getInstance().getAsteroids();
         List<Asteroid> asteroidAddQueue = Globals.getInstance().getQueuedAsteroids();
         AudioPlayer audioplayer = Globals.getInstance().getAudioplayer();
+        List<DelayedExplosion> delayedExplosions = Globals.getInstance().getDelayedExplosions();
         PointsCounter points = Globals.getInstance().getPoints();
         SparkSpawner sparkspawner = Globals.getInstance().getSparkspawner();
 
         Random rnd = new Random();
 
+        // multithreading for collision checker.
+        CountDownLatch latch = new CountDownLatch(ship.getShots().size());
+        ArrayList<Thread> threads = new ArrayList<>();
+        ArrayList<CollisionChecker> collisionCheckers = new ArrayList<>();
+
+        for (int i = 0; i < ship.getShots().size(); i++) {
+            CollisionChecker CC = new CollisionChecker(latch, ship.getShots().get(i));
+            collisionCheckers.add(CC);
+        }
+        for (CollisionChecker CC : collisionCheckers) {
+            Thread thread = new Thread(CC);
+            threads.add(thread);
+        }
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        try {
+            latch.await();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(AsteroidDamage.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        // end  (any collided shots now have a collided == true value, and are then checked with the old singlecore method)
+
         ship.getShots().forEach(shot -> {
-            asteroids.forEach(asteroid -> {
-                if ((asteroid.isAlive()) && (shot.isAlive())) {
-                    if (shot.collide(asteroid)) {
+            if (shot.isCollided()) {
+                shot.setCollided(false);
+                Asteroid asteroid = shot.getCollidedTarget();
+                if (asteroid.isAlive()) {
+                    if (shot.collideFine(shot.getCollidedTarget())) {                    // to-do: (only) if it doesn't hit, check all other roids.
                         shot.setAlive(false);
                         if (shot instanceof Laser_homing) {
                             shot.getTarget().setTargeted(false);
@@ -44,32 +74,20 @@ public class AsteroidDamage {
                                 ArrayList<Integer> newChunksY = new ArrayList<>();
 
                                 for (int i = 0; i < 20; i++) {
-                                    int newChunkX = (int) (asteroid.getShape().getTranslateX() + rnd.nextInt(300) - 150);   // large and medium roids spawn around the ex-roid area, not just the center
+                                    int newChunkX = (int) (asteroid.getShape().getTranslateX() + rnd.nextInt(300) - 150);   // large and medium split roids spawn around the ex-roid area, not just the center
                                     int newChunkY = (int) (asteroid.getShape().getTranslateY() + rnd.nextInt(300) - 150);
-
                                     asteroidspawner.spawn(newChunkX, newChunkY, "large", asteroid.getOriginalColor());
-
                                     newChunksX.add(newChunkX);                        // for large roids, sparks are created at each split new roid instead of only impact location
                                     newChunksY.add(newChunkY);                        // collecting the split roid locations in a list
                                 }
                                 for (int k = 0; k < newChunksX.size(); k++) {
-                                    for (int j = 0; j < 50; j++) {
-                                        sparkspawner.spawn(newChunksX.get(k) + rnd.nextInt(100) - 50, newChunksY.get(k) + rnd.nextInt(100) - 50, "large");
-//                                    spark.setSpawnDelay(k * 3);
-                                    }
+                                    delayedExplosions.add(new DelayedExplosion(newChunksX.get(k), newChunksY.get(k), "largeRoidSplit", k * 3));
+                                    delayedExplosions.add(new DelayedExplosion(newChunksX.get(k), newChunksY.get(k), "largeRoidSplit", k * 3 + 10));
                                 }
-                                for (int n = 0; n < 300; n++) {                   // additional sparkplosions inside the asteroid area.
-                                    sparkspawner.spawn((int) (asteroid.getShape().getTranslateX()) + rnd.nextInt(300) - 150, (int) (asteroid.getShape().getTranslateY()) + rnd.nextInt(300) - 150, "huge");
-//                                spark.setSpawnDelay(2 + rnd.nextInt(15));
-                                }
-                                for (int n = 0; n < 600; n++) {                  // additional sparkplosion at the heart of the ex-asteroid.
-                                    sparkspawner.spawn((int) (asteroid.getShape().getTranslateX()), (int) (asteroid.getShape().getTranslateY()), "huge");
-//                                spark.setSpawnDelay(2 + rnd.nextInt(15));
-                                }
-                                for (int n = 0; n < 900; n++) {                  // additional sparkplosion at the impact location.
-                                    sparkspawner.spawn((int) (shot.getShape().getTranslateX()), (int) (shot.getShape().getTranslateY()), "huge");
-//                                spark.setSpawnDelay(2 + rnd.nextInt(15));
-                                }
+                                delayedExplosions.add(new DelayedExplosion(asteroid.getShape().getTranslateX(), asteroid.getShape().getTranslateY(), "hugeRoidSplit1", 20));   // additional delayed sparkplosion inside the asteroid area. (+random)
+                                delayedExplosions.add(new DelayedExplosion(asteroid.getShape().getTranslateX(), asteroid.getShape().getTranslateY(), "hugeRoidSplit2", 5));    // additional sparkplosion at the heart of the ex-asteroid.
+                                delayedExplosions.add(new DelayedExplosion(shot.getShape().getTranslateX(), shot.getShape().getTranslateY(), "hugeRoidSplit2", 3));            // additional sparkplosion at the impact location.
+                                delayedExplosions.add(new DelayedExplosion(shot.getShape().getTranslateX(), shot.getShape().getTranslateY(), "hugeRoidSplit2", 10));           // additional delayed sparkplosion at the impact location.
                             }
                             if (asteroid.getScale().equals("large")) {
                                 audioplayer.playSound("xplo_3");
@@ -79,18 +97,9 @@ public class AsteroidDamage {
                                     int newChunkY = (int) (asteroid.getShape().getTranslateY() + rnd.nextInt(100) - 50);
                                     asteroidspawner.spawn(newChunkX, newChunkY, "medium", asteroid.getOriginalColor());
                                 }
-                                for (int k = 0; k < 4; k++) {
-                                    int sparkPointX = (int) (asteroid.getShape().getTranslateX() + rnd.nextInt(80) - 40);
-                                    int sparkPointY = (int) (asteroid.getShape().getTranslateY() + rnd.nextInt(80) - 40);
-                                    for (int i = 0; i < 25; i++) {
-                                        sparkspawner.spawn((int) (shot.getShape().getTranslateX()), (int) (shot.getShape().getTranslateY()), "large");
-                                        sparkspawner.spawn(sparkPointX, sparkPointY, "large");
-                                        // spawnDelay still not implemented
-//                                    Spark spark = new Spark((int) (shot.getShape().getTranslateX()), (int) (shot.getShape().getTranslateY()), "large");   // four sequential sets of sparks at the bullet point
-//                                    spark.setSpawnDelay(10 * k);
-//                                    Spark spark2 = new Spark(sparkPointX, sparkPointY, "large");                                                            // and another four around the ex-roid area
-//                                    spark2.setSpawnDelay(10 * k);
-                                    }
+                                for (int i = 0; i < 6; i++) {
+                                    delayedExplosions.add(new DelayedExplosion(shot.getShape().getTranslateX(), shot.getShape().getTranslateY(), "largeRoidSplit", 5 * i));                                                       // five sequential sets of sparks at the bullet point
+                                    delayedExplosions.add(new DelayedExplosion(asteroid.getShape().getTranslateX() + rnd.nextInt(80) - 40, asteroid.getShape().getTranslateY() + rnd.nextInt(80) - 40, "largeRoidSplit", i * 5));     // and another five around the ex-roid area
                                 }
                             }
                             if (asteroid.getScale().equals("medium")) {
@@ -125,9 +134,7 @@ public class AsteroidDamage {
                     }
                 }
             }
-            );
-        }
-        );
+        });
     }
 
     public void flashDamaged(List<Asteroid> asteroids) {

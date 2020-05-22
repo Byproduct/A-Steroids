@@ -67,7 +67,7 @@ public class SparkSpawner {
                 6, 1,
                 -6, 1,
                 -6, -1);
-        for (int i = 0; i < 9000; i++) {
+        for (int i = 0; i < 1000; i++) {
             Spark spark = new Spark(sparkShape, 0, 0);
             spark.setAlive(false);
             this.sparks.add(spark);
@@ -82,10 +82,25 @@ public class SparkSpawner {
             if (!spark.isAlive()) {
                 this.unusedSparkIndex = i;
                 found = true;
-                break;
+                return found;
             }
             i++;                      // spark in this index still in use (alive == true) -> trying next index
         }
+
+        // expand spark list with a new spark if it's full
+        // OK to implement a maximum (not implemented yet) -> return false -> spark won't be created
+        for (int j = 0; j < 100; j++) {
+            Polygon sparkShape = new Polygon(
+                    6, -1,
+                    6, 1,
+                    -6, 1,
+                    -6, -1);
+            Spark newSpark = new Spark(sparkShape, 0, 0);
+            newSpark.setAlive(false);
+            this.sparks.add(newSpark);
+        }
+        this.unusedSparkIndex = i;
+        System.out.println("Expanded spark list by 100 to " + i);
         return found;
     }
 }
